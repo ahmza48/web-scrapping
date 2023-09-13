@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
-# rtx 3080
+#supposed product -> rtx 3080
 
 user_input=input('What product do you want to search for?')
 if ' ' in user_input:
