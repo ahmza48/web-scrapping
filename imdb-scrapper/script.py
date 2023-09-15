@@ -1,3 +1,4 @@
+import csv
 from bs4 import BeautifulSoup
 import requests
 
@@ -34,5 +35,19 @@ try:
 except Exception as e:
     print(e)
 
-for movie in listOfMovies:
-    print(movie)
+# for movie in listOfMovies:
+#     print(movie)
+
+
+# Define the CSV file name and headers
+csv_file = 'imdb_movies_data.csv'
+csv_headers = ['rank', 'name', 'release year', 'rating']
+
+# Write the data to the CSV file
+with open(csv_file, 'w', newline='', encoding='utf-8') as file:
+    writer = csv.DictWriter(file, fieldnames=csv_headers)
+    writer.writeheader()
+    for movie in listOfMovies:
+        writer.writerow(movie)
+
+print(f'Data has been saved to {csv_file}')
