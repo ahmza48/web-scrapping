@@ -45,14 +45,19 @@ class AmazonAPI:
         print(f'Got {len(links)} links to products')
         print('Getting info about products...')
         products=self.get_products_info(links)
+        print(f"Got info about {len(products)} products...")
 
         # self.driver.quit()
+        return products
 
     def get_products_info(self,links):
         asins=self.get_asins(links)
         products=[]
         for asin in asins:
             product=self.get_single_product_info(asin)
+            if product:
+                products.append(product)
+            return products
 
     def get_single_product_info(self,asin):
         print(f'Getting Data -> Product ID: {asin}')
@@ -64,6 +69,24 @@ class AmazonAPI:
         print(seller)
         print('URL: ', self.driver.current_url)
         price=self.get_price()
+        availability=None
+        if price==None:
+            price=float(0.0)
+            availability='Not Available'
+        else:
+            price = float(price.split(self.currency)[1])
+            availability='Available'
+        if title and seller and price:
+            product_info = {
+                'asin': asin,
+                'url': prod_short_url,
+                'availability': availability,
+                'title': title,
+                'seller': seller,
+                'price': price
+            }
+            return product_info
+        return None
 
     def get_title(self):
         try:
@@ -116,7 +139,7 @@ class AmazonAPI:
                 try:
                     price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, class_name)))
                     if price_element:
-                        break  # Exit the loop if the element is found
+                        break
                 except Exception:
                     pass
 
@@ -176,7 +199,7 @@ class AmazonAPI:
                 print(href)
                 links.append(href)
         except Exception as e:
-            print('Didn;t get any results')
+            print('Didn\'t get any results')
             print(str(e))
         return links
 
@@ -188,10 +211,11 @@ class AmazonAPI:
 
 
 if __name__ == '__main__':
-    print('HELLOO WORLDD')
+    print('Starting Script')
     amazon=AmazonAPI(NAME,BASE_URL,FILTERS,CURRENCY)
     print(amazon.price_filters)
-    amazon.run()
+    data = amazon.run()
+    print(data)
 
 
 
