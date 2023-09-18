@@ -81,21 +81,51 @@ class AmazonAPI:
             print(str(e))
             return None
 
+    # def get_price(self):
+    #     try:
+    #         # # price_element = self.driver.find_element(By.ID,'corePrice_desktop')
+    #         # price_tag = self.driver.find_element(By.CLASS_NAME,'a-lineitem')
+    #         # price = price_tag.find_element(By.CLASS_NAME,'a-offscreen').text
+    #         # # price = self.driver.find_element(By.CLASS_NAME,'a-price-whole').text
+    #         # print(price)
+    #         wait = WebDriverWait(self.driver, 4)  # Wait up to 10 seconds for website to load data dynamically
+    #         # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'a-offscreen')))
+    #         # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'aok-offscreen')))
+    #         # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'apexPriceToPay')))
+    #         price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'priceToPay')))
+    #         if not price_element:
+    #             price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'apexPriceToPay')))
+
+    #         price=price_element.text
+    #         print(price)
+    #     except Exception as e:
+    #         print(f'Couldn\'t get price of product - {self.driver.current_url}')
+    #         print(str(e))
+    #         return None
+
+
     def get_price(self):
         try:
-            # # price_element = self.driver.find_element(By.ID,'corePrice_desktop')
-            # price_tag = self.driver.find_element(By.CLASS_NAME,'a-lineitem')
-            # price = price_tag.find_element(By.CLASS_NAME,'a-offscreen').text
-            # # price = self.driver.find_element(By.CLASS_NAME,'a-price-whole').text
-            # print(price)
-            wait = WebDriverWait(self.driver, 4)  # Wait up to 10 seconds for website to load data dynamically
-            # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'a-offscreen')))
-            # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'aok-offscreen')))
-            # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'apexPriceToPay')))
-            price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'priceToPay')))
-            price=price_element.text
+            wait = WebDriverWait(self.driver, 5)
+            price_element = None
 
-            print(price)
+            # Try to locate the price element using different class names
+            possible_class_names = ['a-offscreen', 'apexPriceToPay', 'priceToPay']
+
+            for class_name in possible_class_names:
+                try:
+                    price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, class_name)))
+                    if price_element:
+                        break  # Exit the loop if the element is found
+                except Exception:
+                    pass
+
+            if price_element:
+                price = price_element.text.strip()
+                print(price)
+            else:
+                print('Price element not found')
+                return None
         except Exception as e:
             print(f'Couldn\'t get price of product - {self.driver.current_url}')
             print(str(e))
