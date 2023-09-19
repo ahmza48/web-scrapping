@@ -66,21 +66,19 @@ class AmazonAPI:
         self.price_filters=f'&rh=p_36%3A{filters["min"]}00-{filters["max"]}00'
 
     def run(self):
-        print('Starting Script...')
+        print('Starting Scraping...')
         print(f'Looking for {self.search_item} products...')
         links=self.get_products_links()
         if not links:
             print('Nothing Found! Stopping Scrapper..')
             return
-        for link in links:
-            print(link)
         print(f'Got {len(links)} links to products')
         print('Getting info about products...')
         products=[]
         products=self.get_products_info(links)
         print(f"Got info about {len(products)} products...")
 
-        # self.driver.quit()
+        self.driver.quit()
         return products
 
     def get_products_info(self,links):
@@ -92,7 +90,7 @@ class AmazonAPI:
                 product=self.get_single_product_info(asin)
                 if product:
                     products.append(product)
-        print(products)
+        # print(products)
         return products
     def get_single_product_info(self,asin):
         print(f'Getting Data -> Product ID: {asin}')
@@ -109,14 +107,16 @@ class AmazonAPI:
             price=float(0.0)
             availability=False
         else:
+            if ',' in price:
+                price = price.replace(",", "")
             try:
                 price = price.split("\n")[0] + "." + price.split("\n")[1]
-            except:
-                Exception()
+            except Exception as e:
+                print(e)
             try:
                 price = price.split(".")[0] + "." + price.split(".")[1]
             except:
-                Exception()
+                print(e)
             price = float(price.split(self.currency)[1])
             price=float(price)
             availability=True
@@ -228,7 +228,7 @@ class AmazonAPI:
             for title in titles:
                 anchor_tag=title.find_element(By.TAG_NAME,'a')
                 href=anchor_tag.get_attribute('href')
-                print(href)
+                # print(href)
                 links.append(href)
         except Exception as e:
             print('Didn\'t get any results')
