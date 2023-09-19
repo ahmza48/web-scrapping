@@ -2,6 +2,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import urllib.parse
+import re
 from config import (
     get_chrome_webdriver,
     get_chrome_webdriver_options,
@@ -42,8 +44,11 @@ class AmazonAPI:
         if not links:
             print('Nothing Found! Stopping Scrapper..')
             return
+        for link in links:
+            print(link)
         print(f'Got {len(links)} links to products')
         print('Getting info about products...')
+        products=[]
         products=self.get_products_info(links)
         print(f"Got info about {len(products)} products...")
 
@@ -52,13 +57,15 @@ class AmazonAPI:
 
     def get_products_info(self,links):
         asins=self.get_asins(links)
+        print(asins)
         products=[]
         for asin in asins:
-            product=self.get_single_product_info(asin)
-            if product:
-                products.append(product)
-            return products
-
+            if asin!=None:
+                product=self.get_single_product_info(asin)
+                if product:
+                    products.append(product)
+        print(products)
+        return products
     def get_single_product_info(self,asin):
         print(f'Getting Data -> Product ID: {asin}')
         prod_short_url=self.shorten_url(asin)
@@ -72,18 +79,28 @@ class AmazonAPI:
         availability=None
         if price==None:
             price=float(0.0)
-            availability='Not Available'
+            availability=False
         else:
+            try:
+                price = price.split("\n")[0] + "." + price.split("\n")[1]
+            except:
+                Exception()
+            try:
+                price = price.split(".")[0] + "." + price.split(".")[1]
+            except:
+                Exception()
             price = float(price.split(self.currency)[1])
-            availability='Available'
-        if title and seller and price:
+            price=float(price)
+            availability=True
+        if title and seller and price and availability:
             product_info = {
                 'asin': asin,
                 'url': prod_short_url,
-                'availability': availability,
+                # 'availability': availability,
                 'title': title,
                 'seller': seller,
-                'price': price
+                'price': price,
+                'currency': self.currency
             }
             return product_info
         return None
@@ -104,32 +121,10 @@ class AmazonAPI:
             print(str(e))
             return None
 
-    # def get_price(self):
-    #     try:
-    #         # # price_element = self.driver.find_element(By.ID,'corePrice_desktop')
-    #         # price_tag = self.driver.find_element(By.CLASS_NAME,'a-lineitem')
-    #         # price = price_tag.find_element(By.CLASS_NAME,'a-offscreen').text
-    #         # # price = self.driver.find_element(By.CLASS_NAME,'a-price-whole').text
-    #         # print(price)
-    #         wait = WebDriverWait(self.driver, 4)  # Wait up to 10 seconds for website to load data dynamically
-    #         # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'a-offscreen')))
-    #         # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'aok-offscreen')))
-    #         # price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'apexPriceToPay')))
-    #         price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'priceToPay')))
-    #         if not price_element:
-    #             price_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'apexPriceToPay')))
-
-    #         price=price_element.text
-    #         print(price)
-    #     except Exception as e:
-    #         print(f'Couldn\'t get price of product - {self.driver.current_url}')
-    #         print(str(e))
-    #         return None
-
 
     def get_price(self):
         try:
-            wait = WebDriverWait(self.driver, 5)
+            wait = WebDriverWait(self.driver, 2)
             price_element = None
 
             # Try to locate the price element using different class names
@@ -146,6 +141,7 @@ class AmazonAPI:
             if price_element:
                 price = price_element.text.strip()
                 print(price)
+                return price
             else:
                 print('Price element not found')
                 return None
@@ -165,7 +161,15 @@ class AmazonAPI:
 
     def get_asin(self,prod_link):
         # this will return what is present between '/dp/' and '/ref' -> simply the id of product
-        return prod_link[prod_link.find('/dp/') + 4 :prod_link.find('/ref')]
+        # return prod_link[prod_link.find('/dp/') + 4 :prod_link.find('/ref')]
+        decoded_link = urllib.parse.unquote(prod_link)
+        
+        # Use regular expressions to find ASIN in the decoded URL
+        asin_match = re.search(r'/dp/([A-Z0-9]+)', decoded_link)
+        if asin_match:
+            return asin_match.group(1)
+        else:
+            return None
 
 
     def get_products_links(self):
