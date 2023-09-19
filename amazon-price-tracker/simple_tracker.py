@@ -4,6 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import urllib.parse
 import re
+import json
+from datetime import datetime
 from config import (
     get_chrome_webdriver,
     get_chrome_webdriver_options,
@@ -20,8 +22,34 @@ from config import (
 
 
 class GenerateReport:
-    def __init__(self):
-        pass
+    def __init__(self,file_name,filters,base_link,currency,data):
+        self.file_name = file_name
+        self.filters = filters
+        self.base_link = base_link
+        self.currency = currency
+        self.data = data
+        report = {
+            'title': self.file_name,
+            'date': datetime.now().strftime('%d/%m/%y %H:%M:%S'), #formatting the time
+            'best_item': self.get_best_item(),
+            'currency': self.currency,
+            'filters': self.filters,
+            'base_link': self.base_link,
+            'products': self.data
+        }
+        print("Creating report...")
+        with open(f'{DIRECTORY}/{file_name}.json', 'w') as f:
+            json.dump(report, f)
+        print("Done...")
+
+    def get_best_item(self):
+        try:
+            return sorted(self.data, key=lambda k: k['price'])[0]
+        except Exception as e:
+            print(e)
+            print("Problem with sorting items")
+            return None
+
 
 class AmazonAPI:
     def __init__(self, search_item, base_url, filters, currency):
@@ -100,7 +128,7 @@ class AmazonAPI:
                 'title': title,
                 'seller': seller,
                 'price': price,
-                'currency': self.currency
+                # 'currency': self.currency
             }
             return product_info
         return None
@@ -124,7 +152,7 @@ class AmazonAPI:
 
     def get_price(self):
         try:
-            wait = WebDriverWait(self.driver, 2)
+            wait = WebDriverWait(self.driver, 1)
             price_element = None
 
             # Try to locate the price element using different class names
@@ -220,6 +248,7 @@ if __name__ == '__main__':
     print(amazon.price_filters)
     data = amazon.run()
     print(data)
+    GenerateReport(NAME,FILTERS,BASE_URL,CURRENCY,data)
 
 
 
